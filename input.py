@@ -2,7 +2,6 @@
 # Features:
 # - Users: signup/login
 # - Modes: Train (meals), Flight (meals), Bus, Cab
-# - Fancy emoji CLI
 # - Shows route table first, then schedule table, then booking
 # - Profile option shows user info + booking history (table)
 # - Major cities seeded across modes
