@@ -542,6 +542,7 @@ def main():
             print(portal.register(u,e,p))
         else:
             print("👋 Bye")
+            print("------------------------Thank you for using our transportation portal------------------------------"
             break
 
 
