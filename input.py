@@ -26,7 +26,7 @@ def get_server_conn():
     try:
         return mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, autocommit=False)
     except mysql.connector.Error as e:
-        print("❌ Could not connect to MySQL server:", e)
+        print("Could not connect to MySQL server:", e)
         sys.exit(1)
 
 def ensure_database_and_tables():
@@ -226,14 +226,14 @@ class TransportPortal:
         cur = self.conn.cursor()
         cur.execute("SELECT username FROM users WHERE username=%s", (username,))
         if cur.fetchone():
-            print("❌ Username already exists.")
+            print("Username already exists.")
             return
         cur.execute("""
             INSERT INTO users(username,email,password_hash,role,status,created_at,last_login)
             VALUES(%s,%s,%s,%s,'active',NOW(),NULL)
         """, (username, email, hash_password(password), role))
         self.conn.commit()
-        print("✅ Registered successfully!")
+        print("Registered successfully!")
 
     def login(self, username, password):
         cur = self.conn.cursor(dictionary=True)
@@ -243,13 +243,13 @@ class TransportPortal:
             cur_ins = self.conn.cursor()
             cur_ins.execute("INSERT INTO login_history(username,status,time) VALUES(%s,'fail',NOW())", (username,))
             self.conn.commit()
-            print("❌ Invalid username or password")
+            print("Invalid username or password")
             return None
         cur_upd = self.conn.cursor()
         cur_upd.execute("UPDATE users SET last_login=NOW() WHERE username=%s", (username,))
         cur_upd.execute("INSERT INTO login_history(username,status,time) VALUES(%s,'success',NOW())", (username,))
         self.conn.commit()
-        print(f"✅ Welcome, {username}!")
+        print(f"Welcome, {username}!")
         return u
 
     # show entire table for a mode
@@ -259,7 +259,7 @@ class TransportPortal:
         if df.empty:
             print("(no records)")
             return df
-        print(f"\n📋 FULL {mode.upper()} TABLE:")
+        print(f"\nFULL {mode.upper()} TABLE:")
         # show the important columns first
         cols_order = [c for c in ['train_id','flight_id','bus_id','cab_id','train_name','airline','operator','provider',
                                   'train_number','flight_number','bus_class','route','origin','destination',
@@ -290,10 +290,10 @@ class TransportPortal:
         cur.execute(f"SELECT * FROM {table} WHERE {id_col}=%s", (service_id,))
         s = cur.fetchone()
         if not s:
-            print("❌ Service not found. Make sure you entered the exact ID.")
+            print("Service not found. Make sure you entered the exact ID.")
             return
         if int(s['seats_available']) < int(passengers):
-            print("❌ Not enough seats available.")
+            print("Not enough seats available.")
             return
         total = float(s['fare']) * int(passengers)
         upd = self.conn.cursor()
@@ -311,7 +311,7 @@ class TransportPortal:
             s.get('duration'), passengers, meal, payment_mode, 'booked', total
         ))
         self.conn.commit()
-        print(f"✅ {mode.capitalize()} booked — Booking amount: ₹{total:.2f}")
+        print(f"{mode.capitalize()} booked — Booking amount: ₹{total:.2f}")
 
     # cancel booking (refund 80%) — improved UI: choose by row number
     def cancel_booking(self, user):
@@ -334,7 +334,7 @@ class TransportPortal:
             df['booked_at'] = df['booked_at'].astype(str)
         # add numbered index for easy selection
         df.index = range(1, len(df) + 1)
-        print("\n🧾 Your ACTIVE Bookings (pick a # to cancel):")
+        print("\nYour ACTIVE Bookings (pick a # to cancel):")
         print(df.to_string())
 
         # ask for selection
@@ -345,10 +345,10 @@ class TransportPortal:
         try:
             sel_idx = int(sel_in)
         except ValueError:
-            print("❌ Invalid selection.")
+            print("Invalid selection.")
             return
         if sel_idx < 1 or sel_idx > len(rows):
-            print("❌ Selection out of range.")
+            print("Selection out of range.")
             return
 
         sel = rows[sel_idx - 1]
@@ -375,10 +375,10 @@ class TransportPortal:
             upb.execute("UPDATE bookings SET status=%s, refund_amount=%s, cancelled_at=%s WHERE booking_id=%s",
                         ('cancelled', refund, datetime.now(), bid))
             self.conn.commit()
-            print(f"✅ Booking #{bid} cancelled. Refund: ₹{refund:.2f} (20% cancellation fee retained).")
+            print(f"Booking #{bid} cancelled. Refund: ₹{refund:.2f} (20% cancellation fee retained).")
         except Exception as e:
             self.conn.rollback()
-            print("❌ Error cancelling booking:", e)
+            print("Error cancelling booking:", e)
 
     # show profile bookings (pretty)
     def show_profile(self, user):
@@ -400,7 +400,7 @@ class TransportPortal:
         for dtcol in ['booked_at','cancelled_at']:
             if dtcol in df.columns:
                 df[dtcol] = df[dtcol].astype(str)
-        print("\n🧾 Your Bookings (latest first):")
+        print("\n Your Bookings (latest first):")
         print(df.to_string(index=False))
 
 # helper: show route hints
@@ -418,7 +418,7 @@ def show_route_hints(conn, mode):
 def main():
     conn = ensure_database_and_tables()
     portal = TransportPortal(conn)
-    print("🌐 TRANSPORT BOOKING SYSTEM — prettier booking display + easy cancel")
+    print("TRANSPORT BOOKING SYSTEM — prettier booking display + easy cancel")
     print("Tip: enter partial origin/destination (e.g., 'che' will match 'Chennai').")
 
     while True:
@@ -436,12 +436,12 @@ def main():
             # logged in
             while True:
                 print("\nChoose:")
-                print("1) 🚆 Train")
-                print("2) ✈️ Flight")
-                print("3) 🚌 Bus")
-                print("4) 🚖 Cab")
-                print("5) 🧾 My Bookings")
-                print("6) ❌ Cancel Booking")
+                print("1) Train")
+                print("2) Flight")
+                print("3) Bus")
+                print("4) Cab")
+                print("5) My Bookings")
+                print("6) Cancel Booking")
                 print("7) Logout")
                 op = input("Select: ").strip()
                 if op in ["1","2","3","4"]:
@@ -453,7 +453,7 @@ def main():
                     destination = input("Destination (partial ok): ").strip()
                     results = portal.search(mode, origin, destination)
                     if not results:
-                        print("❌ No matching services found for that route.")
+                        print("No matching services found for that route.")
                         show_route_hints(conn, mode)
                         continue
                     df = pd.DataFrame(results)
@@ -473,13 +473,13 @@ def main():
                     # format fare column before printing if exists
                     if 'fare' in df.columns:
                         df['fare'] = df['fare'].apply(lambda x: f"₹{x:.2f}")
-                    print("\n📋 Matched services (ID on left):")
+                    print("\nMatched services (ID on left):")
                     print(df[available_cols].to_string(index=False))
                     sid = input(f"\nEnter exact {mode.capitalize()} ID from the leftmost column: ").strip()
                     try:
                         pax = int(input("Passengers: ").strip())
                     except ValueError:
-                        print("❌ Invalid passenger number.")
+                        print("Invalid passenger number.")
                         continue
                     meal = None
                     if mode in ["train","flight"]:
@@ -490,7 +490,7 @@ def main():
                 elif op == "6":
                     portal.cancel_booking(user)
                 elif op == "7":
-                    print("🔒 Logged out.")
+                    print("Logged out.")
                     break
                 else:
                     print("Invalid selection.")
@@ -500,7 +500,7 @@ def main():
             pwd = getpass.getpass("Password: ").strip()
             portal.register(uname, email, pwd)
         elif choice == "3":
-            print("Goodbye 👋")
+            print("Goodbye")
             break
         else:
             print("Invalid choice.")
